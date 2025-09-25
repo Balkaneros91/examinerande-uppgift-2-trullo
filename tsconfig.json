@@ -9,7 +9,7 @@
     // See also https://aka.ms/tsconfig/module
     "module": "nodenext",
     "target": "es2022",
-    "moduleResolution": "bundler",
+    "moduleResolution": "nodenext",
 
     "types": [],
     // For nodejs:
@@ -44,6 +44,7 @@
     "skipLibCheck": true,
 
     "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
   },
   "include": ["src"],
