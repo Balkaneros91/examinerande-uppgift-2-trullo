@@ -8,6 +8,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node --enable-source-maps dist/server.js",
+    "seed": "tsx seeds/seed.ts",
     "lint": "eslint .",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
@@ -25,6 +26,7 @@
   },
   "homepage": "https://github.com/joeljohansen-chasacademy/examinerande-uppgift-2#readme",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
@@ -34,6 +36,7 @@
     "zod": "^4.1.11"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/morgan": "^1.9.10",
