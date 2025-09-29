@@ -1,15 +1,21 @@
 {
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
-    // File Layout
-    "rootDir": "./src",
-    "outDir": "./dist",
-
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
     "module": "nodenext",
     "target": "es2022",
     "moduleResolution": "nodenext",
+
+    // File Layout
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+    "baseUrl": "src",
+    "paths": {
+      "@types/*": ["types/*"],
+      "@utils/*": ["utils/*"]
+    },
 
     "types": [],
     // For nodejs:
@@ -47,6 +53,6 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
   },
-  "include": ["src"],
+  "include": ["src", "seeds"],
   "exclude": ["dist", "node_modules"]
 }
