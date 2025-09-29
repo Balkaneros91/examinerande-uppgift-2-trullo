@@ -6,7 +6,6 @@ import { createUserSchema, updateUserSchema } from '../schemas/user.schema.js';
 
 const router = Router();
 
-
 router.post('/', validateBody(createUserSchema), create);
 router.get('/', list);
 router.get('/:id', get);

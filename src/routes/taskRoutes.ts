@@ -6,7 +6,6 @@ import { createTaskSchema, updateTaskSchema } from '../schemas/task.schema.js';
 
 const router = Router();
 
-
 router.post('/', validateBody(createTaskSchema), create);
 router.get('/', list);
 router.get('/:id', get);

@@ -1,16 +1,5 @@
 import { Schema, model, type Types, type InferSchemaType } from 'mongoose';
 
-// type TaskStatus = 'to-do' | 'in progress' | 'blocked' | 'done';
-
-// interface TaskType {
-//   title: string;
-//   description: string;
-//   status: TaskStatus;
-//   assignedTo: Types.ObjectId | null;
-//   finishedAt: Date | null;
-//   updatedAt: Date;
-// }
-
 const TaskSchema = new Schema(
     {
         title: { type: String, required: true, trim: true },

@@ -12,7 +12,6 @@ async function start() {
     console.warn('[WARN] MONGODB_URI not set, falling back to local mongodb://127.0.0.1:27017/trullo');
   }
 
-
     await connectDB(uri);
     app.listen(PORT, () => {
     console.log(`Trullo API (NoSQL) listening on http://localhost:${PORT}`);
