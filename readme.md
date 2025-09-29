@@ -1,4 +1,176 @@
-# Examinationsuppgift - Trullo
+# Trullo - REST API (NoSQL / MongoDB)
+
+Ett enklet projkethanterings-API byggt med Node.js, Exppress och TypeScript. Databasen är MongoDB (vis Mongoose). API-et hanterar **User** och **Task** med CRUD, validering och seed-data.
+
+## Teoretiska resonemang
+
+### 1) Motivering av databasval (NoSQL / MongoDB)
+
+- **Flexibilitet i schema**: utvecklingen går fort, och Task/User kan ändras över tid. MongoDBs dokumentmodell (JSON-lik) gör iteration smidig.
+- **Enkelt att modellera**: Task innehåller fält som `status`, `assignedTo` och tidsstämplar – passar väl som dokument.
+- **Validering i applikationslagret**: med Zod + Mongoose kan vi validera och få tydliga 400-fel.
+- **Trade-offs**: SQL (t.ex. Postgres + Prisma) hade gett starka relationer, migrations och native enum. NoSQL kräver att vi **själva** säkerställer referenser (t.ex. `assignedTo` pekar på befintlig User). För den här uppgiften väger utvecklingstempo/flexibilitet tyngre.
+
+---
+> **När SQL vore bättre**: starka ACID-krav, många JOINs, avancerad rapportering, eller hård dataintegritet.
+---
+> **När NoSQL lyser**: snabba iterationer, flexibla scheman, dokumentcentrerat flöde.
+
+### 2) Tekniker och vad de gör
+
+- **Node.js / Express**: HTTP-server och routing (`/api/users`, `/api/tasks`).
+- **TypeScript**: starkare typer, lättare refactoring, färre klassiska JS-buggar.
+- **Mongoose**: ODM mot MongoDB. Scheman, enum-validering, `unique: true` på email, m.m.
+- **Zod**: **runtime-validering** av request-body. Fångar fel innan DB (t.ex. felaktig `status` → 400).
+- **bcrypt**: lösenord **hashas** med salt innan skrivning (aldrig klartext).
+- **dotenv**: laddar variabler från `.env`.
+- **cors**: tillåter CORS i dev.
+- **morgan**: enkel request-loggning.
+- **helmet** (valfritt): säkra HTTP-headers (lätt att lägga på i prod).
+- **tsx**: snabb dev-körning av TS (utan separat build steg).
+- **Projektupplägg**: `routes → controllers → services → models`, plus
+  **`schemas` (Zod)** för indata, **`types/api.ts` (DTO)** + **`utils/mappers.ts`** för rena API-svar.
+
+### 3) Översiktligt hur applikationen fungerar
+
+1. **Request** kommer in till en **route** (`/api/tasks`).
+2. **Middleware** kör: `express.json()` parsar JSON, `validateBody(ZodSchema)` validerar indata.
+3. **Controller** anropar **Service**.
+4. **Service** kör affärslogik:
+   - `assignedTo` måste peka på en befintlig user (annars 400).
+   - Om `status` sätts till `"done"` → sätt `finishedAt = now`; annars `finishedAt = null`.
+   - Vid skapande/uppdatering av User → hash lösenord (`bcrypt`).
+5. **Model (Mongoose)** persisterar till MongoDB.
+6. **Svar** mappas till DTO via `utils/mappers.ts` (*aldrig* Mongoose-internals eller `password` i svaret).
+7. **Felhantering**: 400 (ogiltig input), 404 (saknas), 409 (unikhetskonflikt, t.ex. email), 500 (oväntat).
+
+## Projektstruktur (kort)
+
+- src/
+- app.ts, server.ts, config/db.ts
+- middleware/ (validate.ts, error.ts)
+- models/ (User.ts, Task.ts)
+- routes/ (userRoutes.ts, taskRoutes.ts)
+- controllers/ (userController.ts, taskController.ts)
+- services/ (userService.ts, taskService.ts)
+- schemas/ (user.schema.ts, task.schema.ts)
+- types/ (api.ts)
+- utils/ (mappers.ts)
+- seeds/ (seed.ts)
+
+## Körguide
+
+```
+### 1) Krav
+- Node 18+
+- MongoDB (lokalt **eller** Atlas).
+  Exempel: Atlas-URI i `.env`.
+
+### 2) Installera
+```bash
+npm install
+npm run dev
+npm run seed
+
+# No .env needed
+
+-----------------------------------------
+# Start local MongoDB via Docker
+docker compose up -d
+
+# Start API (will auto-fallback to mongodb://127.0.0.1:27017/trullo)
+npm run dev
+
+# Seed data
+npm run seed
+```
+
+## Miljövariabler
+
+MONGODB_URI (lokal: mongodb://127.0.0.1:27017/trullo eller Atlas-SRV)
+
+BCRYPT_SALT_ROUNDS=10
+
+PORT=4000 (default)
+
+## Exempel-anrop (cURL)
+
+```
+# Skapa user
+
+curl --json '{"name":"Jane","email":"jane@example.com","password":"Passw0rd!"}' \
+  http://localhost:4000/api/users
+
+
+# Skapa task (byt USER_ID)
+
+curl --json '{"title":"Draft brief","assignedTo":"USER_ID","status":"to-do"}' \
+  http://localhost:4000/api/tasks
+
+
+# Lista / Filtrera
+
+curl http://localhost:4000/api/tasks
+curl "http://localhost:4000/api/tasks?status=to-do"
+curl "http://localhost:4000/api/tasks?assignedTo=USER_ID"
+
+
+# Uppdatera status -> finishedAt sätts/rensas
+
+curl -X PUT --json '{"status":"done"}' http://localhost:4000/api/tasks/TASK_ID
+curl -X PUT --json '{"status":"blocked"}' http://localhost:4000/api/tasks/TASK_ID
+
+```
+
+# API – snabbreferens
+
+## Users
+
+- POST /api/users – skapa (validering: name/email/password)
+
+- GET /api/users – lista
+
+- GET /api/users/:id – hämta en
+
+- PUT /api/users/:id – uppdatera (hashar password om skickat)
+
+- DELETE /api/users/:id – ta bort
+
+## Tasks
+
+- POST /api/tasks – skapa (validering: title, optional description/status/assignedTo)
+
+- GET /api/tasks – lista (filter: status, assignedTo)
+
+- GET /api/tasks/:id – hämta en
+
+- PUT /api/tasks/:id – uppdatera (inkl. status-logik för finishedAt)
+
+- DELETE /api/tasks/:id – ta bort
+
+## Felhantering (exempel)
+
+- 400: ogiltig body/ID/status (Zod/Mongoose ValidationError)
+
+- 404: resurs saknas
+
+- 409: unikhetskonflikt (t.ex. e-post finns redan)
+
+- 500: oväntat fel
+
+<hr>
+<hr>
+
+Happy Coder :)
+
+<hr>
+<hr>
+<hr>
+<hr>
+<hr>
+<hr>
+
+# Uppgiftens krav från lärare
 
 ## Mål
 
