@@ -49,7 +49,7 @@ export async function updateTask(id: string, input: UpdateTaskDTO): Promise<Task
 
 
 export async function listTasks(query: { status?: TaskStatus; assignedTo?: string }) : Promise<TaskDTO[]> {
-    const filter: any = {};
+    const filter: Record<string, unknown> = {};
     if (query.status) filter.status = query.status;
 
     if (query.assignedTo) {
