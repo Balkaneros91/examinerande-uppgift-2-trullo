@@ -1,3 +1,5 @@
+export type { TaskStatus, CreateTaskDTO, UpdateTaskDTO } from '../schemas/task.schema.js';
+
 export type Id = string;
 
 export interface UserDTO {
