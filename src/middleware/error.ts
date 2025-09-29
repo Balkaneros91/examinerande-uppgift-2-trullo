@@ -2,14 +2,16 @@ import type { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
 
 export function notFound(_req: Request, res: Response, _next: NextFunction) {
-  res.status(404).json({ error: { code: 404, message: 'Not found' } });
+  res.status(404).json({ error: { code: 404, message: 'Resource not found' } });
 }
 
 export function errorHandler(err: any, _req: Request, res: Response, _next: NextFunction) {
+  
   const status = err?.status || err?.statusCode;
 
-  if (status && err?.message) {
-    return res.status(status).json({ code: status, message: err.message, details: err.details });
+  if (status) {
+    const message = err?.message ?? (status === 404 ? 'Resource not found' : 'Error');
+    return res.status(status).json({ error: { code: status, message, details: err?.details } });
   }
 
   if (err?.code === 11000) {
@@ -17,7 +19,11 @@ export function errorHandler(err: any, _req: Request, res: Response, _next: Next
   }
 
   if (err?.name === 'CastError') {
-    return res.status(400).json({ error: { code: 400, message: `Invalid ID format`, details: { path: err.path, value: err.value} } });
+    return res.status(400).json({ error: { code: 400, message: `Invalid ID format`, details: { path: (err as any).path, value: (err as any).value} } });
+  }
+
+  if (err?.name === 'DocumentNotFoundError') {
+    return res.status(404).json({ error: { code: 404, message: 'Document not found' } });
   }
 
   if (err?.name === 'ValidationError' || err instanceof mongoose.Error.ValidationError) {
