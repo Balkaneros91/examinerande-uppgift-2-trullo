@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { Types } from 'mongoose';
 
 export const StatusEnum = z.enum(['to-do','in progress','blocked','done']);
+export type TaskStatus = z.infer<typeof StatusEnum>;
 const ObjectId = z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId');
 
 export const createTaskSchema = z.object({
