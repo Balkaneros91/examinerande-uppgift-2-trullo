@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "## Mål",
   "type": "module",
+  "debug": "true",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
