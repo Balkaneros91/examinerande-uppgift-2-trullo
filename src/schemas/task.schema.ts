@@ -18,5 +18,5 @@ export const updateTaskSchema = z.object({
     assignedTo: ObjectId.transform(s => new Types.ObjectId(s)).nullable().optional(),
 });
 
-export type CreateTaskInput = z.infer<typeof createTaskSchema>;
-export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
+export type CreateTaskDTO = z.infer<typeof createTaskSchema>;
+export type UpdateTaskDTO = z.infer<typeof updateTaskSchema>;
