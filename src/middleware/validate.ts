@@ -1,16 +1,47 @@
 import type { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
 
-export const validate = (schema: z.ZodTypeAny) => (req: Request, _res: Response, next: NextFunction) => {
-  const result = schema.safeParse({
-    body: req.body,
-    query: req.query,
-    params: req.params,
-  });
-  if (!result.success) {
-    const error = new Error(result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(', '));
-    (error as any).statusCode = 400;
-    return next(error);
-  }
-  next();
-};
+// export const validate = (schema: z.ZodTypeAny) => (req: Request, _res: Response, next: NextFunction) => {
+//   const result = schema.safeParse({
+//     body: req.body,
+//     query: req.query,
+//     params: req.params,
+//   });
+//   if (!result.success) {
+//     const error = new Error(result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(', '));
+//     (error as any).statusCode = 400;
+//     return next(error);
+//   }
+//   next();
+// };
+
+function formatZod(err: z.ZodError) {
+  return err.issues.map(i => `${i.path.join('.') || '(root)'}: ${i.message}`).join(', ');
+}
+
+export function validateBody<T>(schema: z.ZodSchema<T>) {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return next({ status: 400, message: formatZod(parsed.error) });
+    req.body = parsed.data as any;
+    next();
+  };
+}
+
+export function validateQuery<T>(schema: z.ZodSchema<T>) {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    const parsed = schema.safeParse(req.query);
+    if (!parsed.success) return next({ status: 400, message: formatZod(parsed.error) });
+    req.query = parsed.data as any;
+    next();
+  };
+}
+
+export function validateParams<T>(schema: z.ZodSchema<T>) {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    const parsed = schema.safeParse(req.params);
+    if (!parsed.success) return next({ status: 400, message: formatZod(parsed.error) });
+    req.params = parsed.data as any;
+    next();
+  };
+}
